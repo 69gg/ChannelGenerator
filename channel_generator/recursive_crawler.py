@@ -3,6 +3,7 @@
 from channel_generator.config import Settings
 from channel_generator.fetcher import Fetcher
 from channel_generator.llm_client import LLMClient
+from channel_generator.sources.bing_search import BingSearchSource
 from channel_generator.sources.firecrawl import FirecrawlSource
 from channel_generator.sources.google_search import GoogleResult, GoogleSearchSource
 from channel_generator.url_selector import (
@@ -26,7 +27,27 @@ class RecursiveCrawler:
         self.client = client
         self.fetcher = fetcher
         self.google = GoogleSearchSource(fetcher, client)
+        self.bing = BingSearchSource(fetcher, client)
         self.firecrawl = firecrawl
+
+    async def _search_all(self, keyword: str) -> tuple[list[GoogleResult], list[GoogleResult]]:
+        """Query Google and Bing in parallel for a keyword.
+
+        Args:
+            keyword: Search keyword.
+
+        Returns:
+            Tuple of (google_results, bing_results_as_google_result).
+        """
+        google_task = self.google.search(keyword)
+        bing_task = self.bing.search(keyword)
+        google_results = await google_task
+        bing_results = await bing_task
+        unified_bing = [
+            GoogleResult(title=r.title, url=r.url, snippet=r.snippet)
+            for r in bing_results
+        ]
+        return google_results, unified_bing
 
     async def discover(self, keywords: list[str]) -> list[str]:
         """Discover candidate channel URLs from a list of keywords.
@@ -41,12 +62,16 @@ class RecursiveCrawler:
         visited: set[str] = set()
 
         for keyword in keywords:
-            results = await self.google.search(keyword)
+            google_results, bing_results = await self._search_all(keyword)
+            results = google_results + bing_results
             if not results and self.firecrawl is not None:
                 fc_results = await self.firecrawl.search(
                     keyword, limit=self.settings.max_search_per_query
                 )
-                results = [GoogleResult(title=r.title, url=r.url, snippet=r.description) for r in fc_results]
+                results = [
+                    GoogleResult(title=r.title, url=r.url, snippet=r.description)
+                    for r in fc_results
+                ]
             candidates = [
                 CandidateUrl(title=r.title, url=r.url, context=r.snippet)
                 for r in results
