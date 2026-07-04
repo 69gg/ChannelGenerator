@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import httpx
 
-from channel_generator.fetcher import DEFAULT_HEADERS
+from channel_generator.fetcher import default_headers
 
 
 @dataclass
@@ -22,7 +22,7 @@ class FirecrawlSource:
 
     def __init__(self, timeout: float = 20.0) -> None:
         self.client = httpx.AsyncClient(
-            headers=DEFAULT_HEADERS,
+            headers=default_headers(),
             timeout=timeout,
         )
 

@@ -3,7 +3,8 @@
 from channel_generator.config import Settings
 from channel_generator.fetcher import Fetcher
 from channel_generator.llm_client import LLMClient
-from channel_generator.sources.google_search import GoogleSearchSource
+from channel_generator.sources.firecrawl import FirecrawlSource
+from channel_generator.sources.google_search import GoogleResult, GoogleSearchSource
 from channel_generator.url_selector import (
     CandidateUrl,
     evaluate_page_and_select_links,
@@ -12,18 +13,20 @@ from channel_generator.url_selector import (
 
 
 class RecursiveCrawler:
-    """Crawl starting from Google search results, recursing through promising links."""
+    """Crawl starting from search results, recursing through promising links."""
 
     def __init__(
         self,
         settings: Settings,
         client: LLMClient,
         fetcher: Fetcher,
+        firecrawl: FirecrawlSource | None = None,
     ) -> None:
         self.settings = settings
         self.client = client
         self.fetcher = fetcher
         self.google = GoogleSearchSource(fetcher, client)
+        self.firecrawl = firecrawl
 
     async def discover(self, keywords: list[str]) -> list[str]:
         """Discover candidate channel URLs from a list of keywords.
@@ -39,6 +42,11 @@ class RecursiveCrawler:
 
         for keyword in keywords:
             results = await self.google.search(keyword)
+            if not results and self.firecrawl is not None:
+                fc_results = await self.firecrawl.search(
+                    keyword, limit=self.settings.max_search_per_query
+                )
+                results = [GoogleResult(title=r.title, url=r.url, snippet=r.description) for r in fc_results]
             candidates = [
                 CandidateUrl(title=r.title, url=r.url, context=r.snippet)
                 for r in results

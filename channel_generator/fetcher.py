@@ -1,5 +1,6 @@
 """HTTP fetching and HTML parsing utilities."""
 
+import random
 from dataclasses import dataclass
 from urllib.parse import urljoin, urlparse
 
@@ -7,15 +8,29 @@ import httpx
 from bs4 import BeautifulSoup
 
 DEFAULT_TIMEOUT = 20.0
-DEFAULT_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/125.0.0.0 Safari/537.36"
-    ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-}
+
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0",
+]
+
+
+def default_headers() -> dict[str, str]:
+    return {
+        "User-Agent": random.choice(USER_AGENTS),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "DNT": "1",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+    }
 
 
 @dataclass
@@ -32,18 +47,19 @@ class PageSnapshot:
 
 
 class Fetcher:
-    """Async HTTP fetcher with polite defaults."""
+    """Async HTTP fetcher with polite defaults and retries."""
 
-    def __init__(self, timeout: float = DEFAULT_TIMEOUT) -> None:
+    def __init__(self, timeout: float = DEFAULT_TIMEOUT, retries: int = 2) -> None:
         self.timeout = timeout
+        self.retries = retries
         self.client = httpx.AsyncClient(
-            headers=DEFAULT_HEADERS,
+            headers=default_headers(),
             timeout=timeout,
             follow_redirects=True,
         )
 
     async def fetch(self, url: str) -> PageSnapshot:
-        """Fetch and parse a URL.
+        """Fetch and parse a URL with retries.
 
         Args:
             url: Target URL.
@@ -51,23 +67,26 @@ class Fetcher:
         Returns:
             Parsed page snapshot.
         """
-        try:
-            response = await self.client.get(url)
-        except Exception as exc:
-            return PageSnapshot(
-                url=url,
-                status_code=0,
-                title="",
-                description=str(exc),
-                text="",
-                links=[],
-            )
+        last_error = ""
+        for _attempt in range(self.retries + 1):
+            try:
+                response = await self.client.get(url, headers=default_headers())
+                if response.status_code < 500:
+                    return self._parse(response)
+                last_error = f"HTTP {response.status_code}"
+            except Exception as exc:
+                last_error = str(exc)
+        return PageSnapshot(
+            url=url,
+            status_code=0,
+            title="",
+            description=last_error,
+            text="",
+            links=[],
+        )
 
-        content_type = response.headers.get("content-type", "")
-        if "text/html" not in content_type and response.text:
-            # Some search pages may omit proper content-type
-            pass
-
+    def _parse(self, response: httpx.Response) -> PageSnapshot:
+        """Parse a successful response into a PageSnapshot."""
         text = response.text
         soup = BeautifulSoup(text, "lxml")
 
@@ -83,7 +102,6 @@ class Fetcher:
             if meta_og and meta_og.get("content"):
                 description = meta_og.get("content", "")
 
-        # Visible body text (truncated later by caller if needed)
         body = soup.find("body")
         body_text = body.get_text(separator="\n", strip=True) if body else ""
 

@@ -7,6 +7,7 @@ from channel_generator.keyword_generator import generate_keywords
 from channel_generator.llm_client import LLMClient
 from channel_generator.recursive_crawler import RecursiveCrawler
 from channel_generator.reporter import generate_report, write_report
+from channel_generator.sources.firecrawl import FirecrawlSource
 from channel_generator.state import State
 from channel_generator.summarizer import summarize_channels
 
@@ -18,6 +19,7 @@ class DiscoveryPipeline:
         self.settings = settings
         self.client = LLMClient(settings)
         self.fetcher = Fetcher()
+        self.firecrawl = FirecrawlSource()
         self.state = State(settings.state_path)
 
     async def run(self) -> list[ChannelInfo]:
@@ -31,7 +33,9 @@ class DiscoveryPipeline:
         print(f"Generated {len(keywords)} keywords.")
 
         print("Discovering candidate URLs via recursive crawling...")
-        crawler = RecursiveCrawler(self.settings, self.client, self.fetcher)
+        crawler = RecursiveCrawler(
+            self.settings, self.client, self.fetcher, self.firecrawl
+        )
         candidate_urls = await crawler.discover(keywords)
         print(f"Discovered {len(candidate_urls)} candidate URLs.")
 
@@ -68,3 +72,4 @@ class DiscoveryPipeline:
     async def close(self) -> None:
         """Close resources."""
         await self.fetcher.close()
+        await self.firecrawl.close()
