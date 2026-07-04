@@ -1,7 +1,5 @@
 """Main discovery pipeline orchestration."""
 
-from datetime import UTC, datetime
-
 from channel_generator.analyzer import ChannelInfo, analyze_page
 from channel_generator.config import Settings
 from channel_generator.fetcher import Fetcher
@@ -70,8 +68,3 @@ class DiscoveryPipeline:
     async def close(self) -> None:
         """Close resources."""
         await self.fetcher.close()
-
-
-def current_timestamp() -> str:
-    """Return current UTC ISO timestamp."""
-    return datetime.now(UTC).isoformat()
