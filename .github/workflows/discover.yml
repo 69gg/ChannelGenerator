@@ -50,9 +50,9 @@ jobs:
       - name: Compute release tag and title
         id: release_meta
         run: |
-          TIMESTAMP=$(date -u +"%Y-%m-%d-%H%M")
+          TIMESTAMP=$(date -u +"%Y-%m-%d-%H%M%S")
           echo "tag=report-${TIMESTAMP}" >> "$GITHUB_OUTPUT"
-          echo "title=Channel Report $(date -u +"%Y-%m-%d %H:%M UTC")" >> "$GITHUB_OUTPUT"
+          echo "title=Channel Report $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
