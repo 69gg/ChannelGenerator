@@ -9,10 +9,10 @@ def test_default_settings():
     """Default settings should be populated."""
     settings = load_settings()
     assert settings.llm_base_url == "https://api.openai.com/v1"
-    assert settings.llm_model == "gpt-4o-mini"
+    assert settings.llm_model == "gpt-5.5"
     assert settings.keyword_count == 30
     assert settings.max_results == 200
-    assert settings.effective_summary_model == "gpt-4o-mini"
+    assert settings.effective_summary_model == "gpt-5.5"
     assert settings.manual_keywords == []
 
 

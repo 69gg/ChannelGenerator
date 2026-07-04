@@ -25,8 +25,8 @@ uv sync
 uv run channel-generator run \
   --llm-base-url https://api.openai.com/v1 \
   --llm-api-key "$OPENAI_API_KEY" \
-  --llm-model gpt-4o-mini \
-  --llm-summary-model gpt-4o-mini \
+  --llm-model gpt-5.5 \
+  --llm-summary-model gpt-5.5 \
   --max-results 50
 ```
 
@@ -47,8 +47,8 @@ uv run channel-generator run --config config.toml
    - `LLM_API_KEY` (Secret)
 3. Add Repository variables (optional):
    - `LLM_BASE_URL` (default: `https://api.openai.com/v1`)
-   - `LLM_MODEL` (default: `gpt-4o-mini`)
-   - `LLM_SUMMARY_MODEL` (default: `gpt-4o-mini`)
+   - `LLM_MODEL` (default: `gpt-5.5`)
+   - `LLM_SUMMARY_MODEL` (default: `gpt-5.5`)
    - `KEYWORD_COUNT` (default: `30`)
    - `URLS_PER_SEARCH_PAGE` (default: `5`)
    - `RECURSION_DEPTH` (default: `2`)

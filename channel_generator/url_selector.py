@@ -63,7 +63,7 @@ EVALUATE_PAGE_TOOL = tool(
 )
 
 
-def _truncate(text: str, max_len: int = 4000) -> str:
+def _truncate(text: str, max_len: int = 20000) -> str:
     if len(text) <= max_len:
         return text
     return text[:max_len] + "..."

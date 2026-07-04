@@ -3,10 +3,11 @@
 
 llm_base_url = "https://api.openai.com/v1"
 llm_api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-llm_model = "gpt-4o-mini"
-llm_summary_model = "gpt-4o-mini"
+llm_model = "gpt-5.5"
+llm_summary_model = "gpt-5.5"
 
 keyword_count = 30
+keyword_agents = 8
 urls_per_search_page = 5
 recursion_depth = 2
 urls_per_recursion = 3

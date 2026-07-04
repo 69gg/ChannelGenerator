@@ -16,7 +16,8 @@ def settings(tmp_path):
         llm_api_key="test-key",
         llm_model="gpt-4o-mini",
         llm_summary_model="gpt-4o-mini",
-        keyword_count=2,
+        keyword_count=1,
+        keyword_agents=2,
         urls_per_search_page=1,
         recursion_depth=1,
         urls_per_recursion=1,
@@ -40,6 +41,17 @@ async def test_pipeline_end_to_end(settings):
         return_value=Response(200, text=google_html)
     )
 
+    # Bing search result page
+    bing_html = """
+    <html><body>
+      <a href="https://example.com/chat"><h3>Example Chat on Bing</h3></a>
+      <p>Free AI chat.</p>
+    </body></html>
+    """
+    bing_route = respx.get("https://www.bing.com/search?q=free+ai+chat").mock(
+        return_value=Response(200, text=bing_html)
+    )
+
     # Target page
     target_html = """
     <html><head><title>Example Chat - Free AI</title></head>
@@ -56,16 +68,20 @@ async def test_pipeline_end_to_end(settings):
     pipeline = DiscoveryPipeline(settings)
 
     # Mock LLM responses in expected order:
-    # 1. keyword generation
-    # 2. google search result extraction
-    # 3. url selection from search results
-    # 4. page evaluation (is_channel + follow links)
-    # 5. channel analysis
-    # 6. summarization
+    # 1. keyword generation (agent 1)
+    # 2. keyword generation (agent 2)
+    # 3. google search result extraction
+    # 4. bing search result extraction
+    # 5. url selection from merged search results
+    # 6. page evaluation (is_channel + follow links)
+    # 7. channel analysis
+    # 8. summarization
     pipeline.client.chat_with_tool = AsyncMock(
         side_effect=[
             {"keywords": ["free ai chat"]},
+            {"keywords": ["ai driven design free"]},
             {"results": [{"title": "Example Chat", "url": "https://example.com/chat", "snippet": "Free AI chat"}]},
+            {"results": [{"title": "Example Chat on Bing", "url": "https://example.com/chat", "snippet": "Free AI chat"}]},
             {"urls": [{"url": "https://example.com/chat", "reason": "free chat"}]},
             {"is_channel": True, "follow_urls": []},
             {
@@ -94,6 +110,7 @@ async def test_pipeline_end_to_end(settings):
         await pipeline.close()
 
     assert google_route.called
+    assert bing_route.called
     assert target_route.called
     assert len(channels) == 1
     assert channels[0].name == "ExampleChat"

@@ -24,9 +24,10 @@ jobs:
         env:
           LLM_BASE_URL: ${{ vars.LLM_BASE_URL || 'https://api.openai.com/v1' }}
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_MODEL: ${{ vars.LLM_MODEL || 'gpt-4o-mini' }}
-          LLM_SUMMARY_MODEL: ${{ vars.LLM_SUMMARY_MODEL || 'gpt-4o-mini' }}
+          LLM_MODEL: ${{ vars.LLM_MODEL || 'gpt-5.5' }}
+          LLM_SUMMARY_MODEL: ${{ vars.LLM_SUMMARY_MODEL || 'gpt-5.5' }}
           KEYWORD_COUNT: ${{ vars.KEYWORD_COUNT || '30' }}
+          KEYWORD_AGENTS: ${{ vars.KEYWORD_AGENTS || '8' }}
           URLS_PER_SEARCH_PAGE: ${{ vars.URLS_PER_SEARCH_PAGE || '5' }}
           RECURSION_DEPTH: ${{ vars.RECURSION_DEPTH || '2' }}
           URLS_PER_RECURSION: ${{ vars.URLS_PER_RECURSION || '3' }}
@@ -39,6 +40,7 @@ jobs:
             --llm-model "$LLM_MODEL" \
             --llm-summary-model "$LLM_SUMMARY_MODEL" \
             --keyword-count "$KEYWORD_COUNT" \
+            --keyword-agents "$KEYWORD_AGENTS" \
             --urls-per-search-page "$URLS_PER_SEARCH_PAGE" \
             --recursion-depth "$RECURSION_DEPTH" \
             --urls-per-recursion "$URLS_PER_RECURSION" \

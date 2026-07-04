@@ -46,6 +46,11 @@ def run(
         "--keyword-count",
         help="Number of keywords to generate via LLM.",
     ),
+    keyword_agents: int | None = typer.Option(
+        None,
+        "--keyword-agents",
+        help="Number of parallel keyword-generation agents (perspectives).",
+    ),
     urls_per_search_page: int | None = typer.Option(
         None,
         "--urls-per-search-page",
@@ -102,6 +107,7 @@ def run(
             "llm_model": llm_model,
             "llm_summary_model": llm_summary_model,
             "keyword_count": keyword_count,
+            "keyword_agents": keyword_agents,
             "urls_per_search_page": urls_per_search_page,
             "recursion_depth": recursion_depth,
             "urls_per_recursion": urls_per_recursion,

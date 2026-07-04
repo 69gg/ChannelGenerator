@@ -19,11 +19,12 @@ class Settings(BaseSettings):
     # LLM settings
     llm_base_url: str = Field(default="https://api.openai.com/v1", alias="llm_base_url")
     llm_api_key: str = Field(default="", alias="llm_api_key")
-    llm_model: str = Field(default="gpt-4o-mini", alias="llm_model")
+    llm_model: str = Field(default="gpt-5.5", alias="llm_model")
     llm_summary_model: str | None = Field(default=None, alias="llm_summary_model")
 
     # Search / crawl settings
     keyword_count: int = Field(default=30, alias="keyword_count")
+    keyword_agents: int = Field(default=8, alias="keyword_agents")
     urls_per_search_page: int = Field(default=5, alias="urls_per_search_page")
     recursion_depth: int = Field(default=2, alias="recursion_depth")
     urls_per_recursion: int = Field(default=3, alias="urls_per_recursion")

@@ -79,7 +79,7 @@ class BingSearchSource:
 
         data = await self.client.chat_with_tool(
             system_prompt=SYSTEM_PROMPT,
-            user_prompt=f"Extract search results from the following Bing result page HTML:\n\n{snapshot.html[:12000]}",
+            user_prompt=f"Extract search results from the following Bing result page HTML:\n\n{snapshot.html[:50000]}",
             tool_def=EXTRACT_RESULTS_TOOL,
         )
         items = data.get("results", [])
