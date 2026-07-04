@@ -1,0 +1,65 @@
+name: Discover Free LLM Channels
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Run discovery pipeline
+        env:
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL || 'https://api.openai.com/v1' }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL: ${{ vars.LLM_MODEL || 'gpt-4o-mini' }}
+          LLM_SUMMARY_MODEL: ${{ vars.LLM_SUMMARY_MODEL || 'gpt-4o-mini' }}
+          KEYWORD_COUNT: ${{ vars.KEYWORD_COUNT || '30' }}
+          URLS_PER_SEARCH_PAGE: ${{ vars.URLS_PER_SEARCH_PAGE || '5' }}
+          RECURSION_DEPTH: ${{ vars.RECURSION_DEPTH || '2' }}
+          URLS_PER_RECURSION: ${{ vars.URLS_PER_RECURSION || '3' }}
+          MAX_SEARCH_PER_QUERY: ${{ vars.MAX_SEARCH_PER_QUERY || '20' }}
+          MAX_RESULTS: ${{ vars.MAX_RESULTS || '200' }}
+        run: |
+          uv run channel-generator run \
+            --llm-base-url "$LLM_BASE_URL" \
+            --llm-api-key "$LLM_API_KEY" \
+            --llm-model "$LLM_MODEL" \
+            --llm-summary-model "$LLM_SUMMARY_MODEL" \
+            --keyword-count "$KEYWORD_COUNT" \
+            --urls-per-search-page "$URLS_PER_SEARCH_PAGE" \
+            --recursion-depth "$RECURSION_DEPTH" \
+            --urls-per-recursion "$URLS_PER_RECURSION" \
+            --max-search-per-query "$MAX_SEARCH_PER_QUERY" \
+            --max-results "$MAX_RESULTS" \
+            --output report.md \
+            --state-file state.json
+
+      - name: Compute release tag and title
+        id: release_meta
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%d-%H%M")
+          echo "tag=report-${TIMESTAMP}" >> "$GITHUB_OUTPUT"
+          echo "title=Channel Report $(date -u +"%Y-%m-%d %H:%M UTC")" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_meta.outputs.tag }}
+          name: ${{ steps.release_meta.outputs.title }}
+          body_path: report.md
+          files: |
+            report.md
+            state.json

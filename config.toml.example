@@ -1,0 +1,17 @@
+# ChannelGenerator 配置示例
+# 复制为 config.toml 并填入真实值，config.toml 已被 .gitignore 忽略
+
+llm_base_url = "https://api.openai.com/v1"
+llm_api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+llm_model = "gpt-4o-mini"
+llm_summary_model = "gpt-4o-mini"
+
+keyword_count = 30
+urls_per_search_page = 5
+recursion_depth = 2
+urls_per_recursion = 3
+max_search_per_query = 20
+
+max_results = 200
+report_path = "report.md"
+state_path = "state.json"
