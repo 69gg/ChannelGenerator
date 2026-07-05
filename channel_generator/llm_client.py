@@ -1,11 +1,15 @@
 """Async OpenAI-compatible LLM client with tool-call support."""
 
+import json
+from json import JSONDecodeError
 from typing import Any, Literal
 
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionToolParam
 
 from channel_generator.config import Settings
+
+TOOL_CALL_ATTEMPTS = 2
 
 
 def tool(name: str, description: str, parameters: dict[str, Any]) -> ChatCompletionToolParam:
@@ -52,23 +56,38 @@ class LLMClient:
         Returns:
             Parsed tool arguments as a dict.
         """
-        response = await self.client.chat.completions.create(
-            model=model or self.settings.llm_model,
-            temperature=temperature,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            tools=[tool_def],
-            tool_choice={"type": "function", "function": {"name": tool_def["function"]["name"]}},
-            **self.settings.chat_completion_options(model_role),
-        )
-        message = response.choices[0].message
-        if not message.tool_calls:
-            raise ValueError("LLM did not return a tool call")
-        import json
+        last_error = "unknown error"
+        for _attempt in range(TOOL_CALL_ATTEMPTS):
+            response = await self.client.chat.completions.create(
+                model=model or self.settings.llm_model,
+                temperature=temperature,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                tools=[tool_def],
+                tool_choice={"type": "function", "function": {"name": tool_def["function"]["name"]}},
+                **self.settings.chat_completion_options(model_role),
+            )
+            message = response.choices[0].message
+            if not message.tool_calls:
+                last_error = "LLM did not return a tool call"
+                continue
 
-        return json.loads(message.tool_calls[0].function.arguments)
+            arguments = message.tool_calls[0].function.arguments
+            try:
+                data = json.loads(arguments)
+            except JSONDecodeError as exc:
+                last_error = f"invalid tool-call JSON: {exc.msg}"
+                continue
+
+            if not isinstance(data, dict):
+                last_error = "tool-call JSON was not an object"
+                continue
+
+            return data
+
+        raise ValueError(f"LLM did not return valid tool-call arguments: {last_error}")
 
     async def chat_text(
         self,

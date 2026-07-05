@@ -61,12 +61,20 @@ class RecursiveCrawler:
         visited: set[str] = set()
 
         for keyword in keywords:
-            google_results, bing_results = await self._search_all(keyword)
+            try:
+                google_results, bing_results = await self._search_all(keyword)
+            except Exception as exc:
+                print(f"Skipping keyword {keyword!r}: search failed: {exc}")
+                continue
             results = google_results + bing_results
             if not results and self.firecrawl is not None:
-                fc_results = await self.firecrawl.search(
-                    keyword, limit=self.settings.max_search_per_query
-                )
+                try:
+                    fc_results = await self.firecrawl.search(
+                        keyword, limit=self.settings.max_search_per_query
+                    )
+                except Exception as exc:
+                    print(f"Skipping keyword {keyword!r}: fallback search failed: {exc}")
+                    continue
                 results = [
                     GoogleResult(title=r.title, url=r.url, snippet=r.description)
                     for r in fc_results
@@ -74,11 +82,15 @@ class RecursiveCrawler:
             candidates = [
                 CandidateUrl(title=r.title, url=r.url, context=r.snippet) for r in results
             ]
-            selected = await select_from_search_results(
-                self.client,
-                candidates,
-                self.settings.urls_per_search_page,
-            )
+            try:
+                selected = await select_from_search_results(
+                    self.client,
+                    candidates,
+                    self.settings.urls_per_search_page,
+                )
+            except Exception as exc:
+                print(f"Skipping keyword {keyword!r}: URL selection failed: {exc}")
+                continue
 
             for url in selected:
                 await self._crawl(url, depth=0, visited=visited, channel_urls=channel_urls)
@@ -108,15 +120,19 @@ class RecursiveCrawler:
         if snapshot.status_code != 200:
             return
 
-        is_channel, follow_urls = await evaluate_page_and_select_links(
-            self.client,
-            url=snapshot.url,
-            title=snapshot.title,
-            description=snapshot.description,
-            page_text=snapshot.text,
-            links=snapshot.links,
-            max_follow=self.settings.urls_per_recursion,
-        )
+        try:
+            is_channel, follow_urls = await evaluate_page_and_select_links(
+                self.client,
+                url=snapshot.url,
+                title=snapshot.title,
+                description=snapshot.description,
+                page_text=snapshot.text,
+                links=snapshot.links,
+                max_follow=self.settings.urls_per_recursion,
+            )
+        except Exception as exc:
+            print(f"Skipping URL {snapshot.url}: page evaluation failed: {exc}")
+            return
 
         if is_channel:
             channel_urls.add(snapshot.url)

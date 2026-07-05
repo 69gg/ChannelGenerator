@@ -10,12 +10,14 @@ from channel_generator.llm_client import LLMClient, tool
 class FakeCompletions:
     """Capture chat completion calls."""
 
-    def __init__(self) -> None:
+    def __init__(self, arguments: list[str] | None = None) -> None:
+        self.arguments = arguments or ['{"ok": true}']
         self.calls: list[dict[str, Any]] = []
 
     async def create(self, **kwargs: Any) -> SimpleNamespace:
         """Record kwargs and return a tool-call shaped response."""
         self.calls.append(kwargs)
+        index = min(len(self.calls) - 1, len(self.arguments) - 1)
         return SimpleNamespace(
             choices=[
                 SimpleNamespace(
@@ -23,7 +25,7 @@ class FakeCompletions:
                         content="hello",
                         tool_calls=[
                             SimpleNamespace(
-                                function=SimpleNamespace(arguments='{"ok": true}'),
+                                function=SimpleNamespace(arguments=self.arguments[index]),
                             )
                         ],
                     ),
@@ -32,9 +34,12 @@ class FakeCompletions:
         )
 
 
-def _client_with_fake_completions(settings: Settings) -> tuple[LLMClient, FakeCompletions]:
+def _client_with_fake_completions(
+    settings: Settings,
+    arguments: list[str] | None = None,
+) -> tuple[LLMClient, FakeCompletions]:
     client = LLMClient(settings)
-    completions = FakeCompletions()
+    completions = FakeCompletions(arguments)
     client.client = SimpleNamespace(
         chat=SimpleNamespace(completions=completions),
     )
@@ -68,6 +73,28 @@ async def test_chat_with_tool_includes_main_reasoning_options() -> None:
     assert completions.calls[0]["extra_body"] == {
         "thinking": {"type": "enabled"},
     }
+
+
+async def test_chat_with_tool_retries_invalid_tool_json() -> None:
+    """Malformed tool-call arguments should be retried once."""
+    settings = Settings(llm_api_key="test")
+    client, completions = _client_with_fake_completions(
+        settings,
+        arguments=['{"ok": ', '{"ok": true}'],
+    )
+
+    result = await client.chat_with_tool(
+        system_prompt="system",
+        user_prompt="user",
+        tool_def=tool(
+            name="record",
+            description="Record a result.",
+            parameters={"type": "object", "properties": {}, "required": []},
+        ),
+    )
+
+    assert result == {"ok": True}
+    assert len(completions.calls) == 2
 
 
 async def test_chat_with_tool_includes_summary_reasoning_options() -> None:
