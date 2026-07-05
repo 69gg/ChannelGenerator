@@ -49,6 +49,10 @@ uv run channel-generator run --config config.toml
    - `LLM_BASE_URL` (default: `https://api.openai.com/v1`)
    - `LLM_MODEL` (default: `gpt-5.5`)
    - `LLM_SUMMARY_MODEL` (default: `gpt-5.5`)
+   - `LLM_THINKING_ENABLED` (optional, `true` or `false`)
+   - `LLM_REASONING_EFFORT` (optional, for example `high`)
+   - `LLM_SUMMARY_THINKING_ENABLED` (optional, `true` or `false`)
+   - `LLM_SUMMARY_REASONING_EFFORT` (optional, for example `high`)
    - `KEYWORD_COUNT` (default: `30`)
    - `KEYWORD_AGENTS` (default: `8`)
    - `URLS_PER_SEARCH_PAGE` (default: `5`)
@@ -80,7 +84,15 @@ Supplementary sources (Firecrawl keyless search, GitHub, Hacker News, Reddit) ar
 --llm-api-key TEXT             OpenAI-compatible API key
 --llm-model TEXT               Model for keyword/url/analysis steps
 --llm-summary-model TEXT       Model for final summarization
+--llm-thinking / --no-llm-thinking
+                               Enable or disable provider-specific thinking for the main model
+--llm-reasoning-effort TEXT    Reasoning effort for the main model
+--llm-summary-thinking / --no-llm-summary-thinking
+                               Enable or disable provider-specific thinking for the summary model
+--llm-summary-reasoning-effort TEXT
+                               Reasoning effort for the summary model
 --keyword-count INTEGER        Number of keywords to generate
+--keyword-agents INTEGER       Number of parallel keyword-generation agents
 --urls-per-search-page INT     URLs to pick from each Google result page
 --recursion-depth INT          Maximum recursion depth
 --urls-per-recursion INT       Promising links to follow per recursion level

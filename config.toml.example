@@ -5,6 +5,11 @@ llm_base_url = "https://api.openai.com/v1"
 llm_api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 llm_model = "gpt-5.5"
 llm_summary_model = "gpt-5.5"
+# Optional provider-specific thinking controls.
+# llm_thinking_enabled = true
+# llm_reasoning_effort = "high"
+# llm_summary_thinking_enabled = true
+# llm_summary_reasoning_effort = "high"
 
 keyword_count = 30
 keyword_agents = 8

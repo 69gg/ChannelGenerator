@@ -13,6 +13,8 @@ def test_default_settings():
     assert settings.keyword_count == 30
     assert settings.max_results == 200
     assert settings.effective_summary_model == "gpt-5.5"
+    assert settings.chat_completion_options() == {}
+    assert settings.chat_completion_options("summary") == {}
     assert settings.manual_keywords == []
 
 
@@ -40,6 +42,10 @@ llm_api_key = "test-key"
 llm_model = "gpt-4o"
 keyword_count = 10
 max_results = 50
+llm_thinking_enabled = true
+llm_reasoning_effort = "high"
+llm_summary_thinking_enabled = false
+llm_summary_reasoning_effort = "medium"
 """,
         encoding="utf-8",
     )
@@ -49,6 +55,14 @@ max_results = 50
     assert settings.llm_model == "gpt-4o"
     assert settings.keyword_count == 10
     assert settings.max_results == 50
+    assert settings.chat_completion_options() == {
+        "reasoning_effort": "high",
+        "extra_body": {"thinking": {"type": "enabled"}},
+    }
+    assert settings.chat_completion_options("summary") == {
+        "reasoning_effort": "medium",
+        "extra_body": {"thinking": {"type": "disabled"}},
+    }
 
 
 def test_cli_overrides_toml(tmp_path: Path):

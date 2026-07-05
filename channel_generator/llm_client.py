@@ -1,6 +1,6 @@
 """Async OpenAI-compatible LLM client with tool-call support."""
 
-from typing import Any
+from typing import Any, Literal
 
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionToolParam
@@ -36,6 +36,7 @@ class LLMClient:
         user_prompt: str,
         tool_def: ChatCompletionToolParam,
         model: str | None = None,
+        model_role: Literal["main", "summary"] = "main",
         temperature: float = 0.5,
     ) -> dict[str, Any]:
         """Call the LLM with a single required tool and return the tool arguments.
@@ -45,6 +46,7 @@ class LLMClient:
             user_prompt: User prompt.
             tool_def: OpenAI tool definition.
             model: Optional model override; defaults to settings.llm_model.
+            model_role: Which model option profile to apply.
             temperature: Sampling temperature.
 
         Returns:
@@ -59,6 +61,7 @@ class LLMClient:
             ],
             tools=[tool_def],
             tool_choice={"type": "function", "function": {"name": tool_def["function"]["name"]}},
+            **self.settings.chat_completion_options(model_role),
         )
         message = response.choices[0].message
         if not message.tool_calls:
@@ -72,6 +75,7 @@ class LLMClient:
         system_prompt: str,
         user_prompt: str,
         model: str | None = None,
+        model_role: Literal["main", "summary"] = "main",
         temperature: float = 0.5,
     ) -> str:
         """Call the LLM and return plain text.
@@ -80,6 +84,7 @@ class LLMClient:
             system_prompt: System prompt.
             user_prompt: User prompt.
             model: Optional model override.
+            model_role: Which model option profile to apply.
             temperature: Sampling temperature.
 
         Returns:
@@ -92,6 +97,7 @@ class LLMClient:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
+            **self.settings.chat_completion_options(model_role),
         )
         content = response.choices[0].message.content
         return content or ""

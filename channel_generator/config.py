@@ -1,6 +1,7 @@
 """Configuration management for ChannelGenerator."""
 
 from pathlib import Path
+from typing import Any, Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -21,6 +22,16 @@ class Settings(BaseSettings):
     llm_api_key: str = Field(default="", alias="llm_api_key")
     llm_model: str = Field(default="gpt-5.5", alias="llm_model")
     llm_summary_model: str | None = Field(default=None, alias="llm_summary_model")
+    llm_thinking_enabled: bool | None = Field(default=None, alias="llm_thinking_enabled")
+    llm_reasoning_effort: str | None = Field(default=None, alias="llm_reasoning_effort")
+    llm_summary_thinking_enabled: bool | None = Field(
+        default=None,
+        alias="llm_summary_thinking_enabled",
+    )
+    llm_summary_reasoning_effort: str | None = Field(
+        default=None,
+        alias="llm_summary_reasoning_effort",
+    )
 
     # Search / crawl settings
     keyword_count: int = Field(default=30, alias="keyword_count")
@@ -45,6 +56,38 @@ class Settings(BaseSettings):
     def effective_summary_model(self) -> str:
         """Return the model used for summary; fallback to main model if not set."""
         return self.llm_summary_model or self.llm_model
+
+    def chat_completion_options(
+        self,
+        model_role: Literal["main", "summary"] = "main",
+    ) -> dict[str, Any]:
+        """Return model-specific extra chat completion options.
+
+        The OpenAI-compatible ecosystem is not fully standardized for thinking controls. Keep
+        provider-specific fields optional and route them through the SDK's request options.
+        """
+        thinking_enabled = self.llm_thinking_enabled
+        reasoning_effort = self.llm_reasoning_effort
+
+        if model_role == "summary":
+            if self.llm_summary_thinking_enabled is not None:
+                thinking_enabled = self.llm_summary_thinking_enabled
+            if self.llm_summary_reasoning_effort:
+                reasoning_effort = self.llm_summary_reasoning_effort
+
+        options: dict[str, Any] = {}
+        if reasoning_effort:
+            options["reasoning_effort"] = reasoning_effort
+
+        extra_body: dict[str, Any] = {}
+        if thinking_enabled is not None:
+            extra_body["thinking"] = {
+                "type": "enabled" if thinking_enabled else "disabled",
+            }
+        if extra_body:
+            options["extra_body"] = extra_body
+
+        return options
 
     @property
     def manual_keywords(self) -> list[str]:

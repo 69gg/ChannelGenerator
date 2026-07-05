@@ -80,6 +80,7 @@ async def summarize_channels(
         user_prompt=user_prompt,
         tool_def=SUMMARIZE_TOOL,
         model=settings.effective_summary_model,
+        model_role="summary",
     )
     return {
         "summary": str(data.get("summary", "")),

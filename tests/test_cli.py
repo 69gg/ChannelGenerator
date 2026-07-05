@@ -19,4 +19,6 @@ def test_run_help():
     result = runner.invoke(app, ["run", "--help"])
     assert result.exit_code == 0
     assert "--llm-api-key" in result.output
+    assert "--llm-reasoning-" in result.output
+    assert "--llm-summary-reas" in result.output
     assert "--keyword-count" in result.output

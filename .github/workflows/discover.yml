@@ -42,6 +42,10 @@ jobs:
           LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
           LLM_MODEL: ${{ vars.LLM_MODEL }}
           LLM_SUMMARY_MODEL: ${{ vars.LLM_SUMMARY_MODEL }}
+          LLM_THINKING_ENABLED: ${{ vars.LLM_THINKING_ENABLED }}
+          LLM_REASONING_EFFORT: ${{ vars.LLM_REASONING_EFFORT }}
+          LLM_SUMMARY_THINKING_ENABLED: ${{ vars.LLM_SUMMARY_THINKING_ENABLED }}
+          LLM_SUMMARY_REASONING_EFFORT: ${{ vars.LLM_SUMMARY_REASONING_EFFORT }}
           KEYWORD_COUNT: ${{ vars.KEYWORD_COUNT }}
           KEYWORD_AGENTS: ${{ vars.KEYWORD_AGENTS }}
           URLS_PER_SEARCH_PAGE: ${{ vars.URLS_PER_SEARCH_PAGE }}
@@ -62,9 +66,33 @@ jobs:
             fi
           }
 
+          add_bool_flag() {
+            case "${3,,}" in
+              true|1|yes|on)
+                args+=("$1")
+                ;;
+              false|0|no|off)
+                args+=("$2")
+                ;;
+              "")
+                ;;
+              *)
+                echo "$3 is not a valid boolean for $1/$2"
+                exit 1
+                ;;
+            esac
+          }
+
           add_arg --llm-base-url "$LLM_BASE_URL"
           add_arg --llm-model "$LLM_MODEL"
           add_arg --llm-summary-model "$LLM_SUMMARY_MODEL"
+          add_bool_flag --llm-thinking --no-llm-thinking "$LLM_THINKING_ENABLED"
+          add_arg --llm-reasoning-effort "$LLM_REASONING_EFFORT"
+          add_bool_flag \
+            --llm-summary-thinking \
+            --no-llm-summary-thinking \
+            "$LLM_SUMMARY_THINKING_ENABLED"
+          add_arg --llm-summary-reasoning-effort "$LLM_SUMMARY_REASONING_EFFORT"
           add_arg --keyword-count "$KEYWORD_COUNT"
           add_arg --keyword-agents "$KEYWORD_AGENTS"
           add_arg --urls-per-search-page "$URLS_PER_SEARCH_PAGE"

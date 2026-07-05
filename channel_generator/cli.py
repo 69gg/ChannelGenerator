@@ -41,6 +41,26 @@ def run(
         "--llm-summary-model",
         help="Model name for final summarization.",
     ),
+    llm_thinking_enabled: bool | None = typer.Option(
+        None,
+        "--llm-thinking/--no-llm-thinking",
+        help="Enable or disable provider-specific thinking for the main model.",
+    ),
+    llm_reasoning_effort: str | None = typer.Option(
+        None,
+        "--llm-reasoning-effort",
+        help="Reasoning effort for the main model, for providers that support it.",
+    ),
+    llm_summary_thinking_enabled: bool | None = typer.Option(
+        None,
+        "--llm-summary-thinking/--no-llm-summary-thinking",
+        help="Enable or disable provider-specific thinking for the summary model.",
+    ),
+    llm_summary_reasoning_effort: str | None = typer.Option(
+        None,
+        "--llm-summary-reasoning-effort",
+        help="Reasoning effort for the summary model, for providers that support it.",
+    ),
     keyword_count: int | None = typer.Option(
         None,
         "--keyword-count",
@@ -106,6 +126,10 @@ def run(
             "llm_api_key": llm_api_key,
             "llm_model": llm_model,
             "llm_summary_model": llm_summary_model,
+            "llm_thinking_enabled": llm_thinking_enabled,
+            "llm_reasoning_effort": llm_reasoning_effort,
+            "llm_summary_thinking_enabled": llm_summary_thinking_enabled,
+            "llm_summary_reasoning_effort": llm_summary_reasoning_effort,
             "keyword_count": keyword_count,
             "keyword_agents": keyword_agents,
             "urls_per_search_page": urls_per_search_page,
