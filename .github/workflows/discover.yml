@@ -29,33 +29,33 @@ jobs:
 
       - name: Validate required secrets
         env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          CFG_LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
         run: |
-          if [ -z "$LLM_API_KEY" ]; then
+          if [ -z "$CFG_LLM_API_KEY" ]; then
             echo "LLM_API_KEY secret is required. Configure it in Settings > Secrets and variables > Actions."
             exit 1
           fi
 
       - name: Run discovery pipeline
         env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
-          LLM_MODEL: ${{ vars.LLM_MODEL }}
-          LLM_SUMMARY_MODEL: ${{ vars.LLM_SUMMARY_MODEL }}
-          LLM_THINKING_ENABLED: ${{ vars.LLM_THINKING_ENABLED }}
-          LLM_REASONING_EFFORT: ${{ vars.LLM_REASONING_EFFORT }}
-          LLM_SUMMARY_THINKING_ENABLED: ${{ vars.LLM_SUMMARY_THINKING_ENABLED }}
-          LLM_SUMMARY_REASONING_EFFORT: ${{ vars.LLM_SUMMARY_REASONING_EFFORT }}
-          KEYWORD_COUNT: ${{ vars.KEYWORD_COUNT }}
-          KEYWORD_AGENTS: ${{ vars.KEYWORD_AGENTS }}
-          URLS_PER_SEARCH_PAGE: ${{ vars.URLS_PER_SEARCH_PAGE }}
-          RECURSION_DEPTH: ${{ vars.RECURSION_DEPTH }}
-          URLS_PER_RECURSION: ${{ vars.URLS_PER_RECURSION }}
-          MAX_SEARCH_PER_QUERY: ${{ vars.MAX_SEARCH_PER_QUERY }}
-          MAX_RESULTS: ${{ vars.MAX_RESULTS }}
+          CFG_LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          CFG_LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+          CFG_LLM_MODEL: ${{ vars.LLM_MODEL }}
+          CFG_LLM_SUMMARY_MODEL: ${{ vars.LLM_SUMMARY_MODEL }}
+          CFG_LLM_THINKING_ENABLED: ${{ vars.LLM_THINKING_ENABLED }}
+          CFG_LLM_REASONING_EFFORT: ${{ vars.LLM_REASONING_EFFORT }}
+          CFG_LLM_SUMMARY_THINKING_ENABLED: ${{ vars.LLM_SUMMARY_THINKING_ENABLED }}
+          CFG_LLM_SUMMARY_REASONING_EFFORT: ${{ vars.LLM_SUMMARY_REASONING_EFFORT }}
+          CFG_KEYWORD_COUNT: ${{ vars.KEYWORD_COUNT }}
+          CFG_KEYWORD_AGENTS: ${{ vars.KEYWORD_AGENTS }}
+          CFG_URLS_PER_SEARCH_PAGE: ${{ vars.URLS_PER_SEARCH_PAGE }}
+          CFG_RECURSION_DEPTH: ${{ vars.RECURSION_DEPTH }}
+          CFG_URLS_PER_RECURSION: ${{ vars.URLS_PER_RECURSION }}
+          CFG_MAX_SEARCH_PER_QUERY: ${{ vars.MAX_SEARCH_PER_QUERY }}
+          CFG_MAX_RESULTS: ${{ vars.MAX_RESULTS }}
         run: |
           args=(
-            --llm-api-key "$LLM_API_KEY"
+            --llm-api-key "$CFG_LLM_API_KEY"
             --output report.md
             --state-file state.json
           )
@@ -83,23 +83,23 @@ jobs:
             esac
           }
 
-          add_arg --llm-base-url "$LLM_BASE_URL"
-          add_arg --llm-model "$LLM_MODEL"
-          add_arg --llm-summary-model "$LLM_SUMMARY_MODEL"
-          add_bool_flag --llm-thinking --no-llm-thinking "$LLM_THINKING_ENABLED"
-          add_arg --llm-reasoning-effort "$LLM_REASONING_EFFORT"
+          add_arg --llm-base-url "$CFG_LLM_BASE_URL"
+          add_arg --llm-model "$CFG_LLM_MODEL"
+          add_arg --llm-summary-model "$CFG_LLM_SUMMARY_MODEL"
+          add_bool_flag --llm-thinking --no-llm-thinking "$CFG_LLM_THINKING_ENABLED"
+          add_arg --llm-reasoning-effort "$CFG_LLM_REASONING_EFFORT"
           add_bool_flag \
             --llm-summary-thinking \
             --no-llm-summary-thinking \
-            "$LLM_SUMMARY_THINKING_ENABLED"
-          add_arg --llm-summary-reasoning-effort "$LLM_SUMMARY_REASONING_EFFORT"
-          add_arg --keyword-count "$KEYWORD_COUNT"
-          add_arg --keyword-agents "$KEYWORD_AGENTS"
-          add_arg --urls-per-search-page "$URLS_PER_SEARCH_PAGE"
-          add_arg --recursion-depth "$RECURSION_DEPTH"
-          add_arg --urls-per-recursion "$URLS_PER_RECURSION"
-          add_arg --max-search-per-query "$MAX_SEARCH_PER_QUERY"
-          add_arg --max-results "$MAX_RESULTS"
+            "$CFG_LLM_SUMMARY_THINKING_ENABLED"
+          add_arg --llm-summary-reasoning-effort "$CFG_LLM_SUMMARY_REASONING_EFFORT"
+          add_arg --keyword-count "$CFG_KEYWORD_COUNT"
+          add_arg --keyword-agents "$CFG_KEYWORD_AGENTS"
+          add_arg --urls-per-search-page "$CFG_URLS_PER_SEARCH_PAGE"
+          add_arg --recursion-depth "$CFG_RECURSION_DEPTH"
+          add_arg --urls-per-recursion "$CFG_URLS_PER_RECURSION"
+          add_arg --max-search-per-query "$CFG_MAX_SEARCH_PER_QUERY"
+          add_arg --max-results "$CFG_MAX_RESULTS"
 
           uv run channel-generator run "${args[@]}"
 
