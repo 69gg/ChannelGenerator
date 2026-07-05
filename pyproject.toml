@@ -1,7 +1,7 @@
 [project]
 name = "channel-generator"
 version = "0.1.0"
-description = "AI-driven discovery of free LLM chat channels"
+description = "AI-powered crawler that discovers free LLM chat services and generates Markdown reports."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
