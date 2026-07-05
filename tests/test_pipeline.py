@@ -80,8 +80,24 @@ async def test_pipeline_end_to_end(settings):
         side_effect=[
             {"keywords": ["free ai chat"]},
             {"keywords": ["ai driven design free"]},
-            {"results": [{"title": "Example Chat", "url": "https://example.com/chat", "snippet": "Free AI chat"}]},
-            {"results": [{"title": "Example Chat on Bing", "url": "https://example.com/chat", "snippet": "Free AI chat"}]},
+            {
+                "results": [
+                    {
+                        "title": "Example Chat",
+                        "url": "https://example.com/chat",
+                        "snippet": "Free AI chat",
+                    }
+                ]
+            },
+            {
+                "results": [
+                    {
+                        "title": "Example Chat on Bing",
+                        "url": "https://example.com/chat",
+                        "snippet": "Free AI chat",
+                    }
+                ]
+            },
             {"urls": [{"url": "https://example.com/chat", "reason": "free chat"}]},
             {"is_channel": True, "follow_urls": []},
             {
@@ -118,3 +134,88 @@ async def test_pipeline_end_to_end(settings):
     report_text = settings.report_path.read_text(encoding="utf-8")
     assert "ExampleChat" in report_text
     assert settings.state_path.exists()
+
+
+@respx.mock
+async def test_pipeline_dry_run_does_not_write_files(settings):
+    """Dry run should discover channels without writing report or state."""
+    settings.dry_run = True
+
+    google_html = """
+    <html><body>
+      <a href="https://example.com/chat"><h3>Example Chat</h3></a>
+      <div>Free AI chat website.</div>
+    </body></html>
+    """
+    respx.get("https://www.google.com/search?q=free+ai+chat").mock(
+        return_value=Response(200, text=google_html)
+    )
+
+    bing_html = """
+    <html><body>
+      <a href="https://example.com/chat"><h3>Example Chat on Bing</h3></a>
+      <p>Free AI chat.</p>
+    </body></html>
+    """
+    respx.get("https://www.bing.com/search?q=free+ai+chat").mock(
+        return_value=Response(200, text=bing_html)
+    )
+
+    target_html = """
+    <html><head><title>Example Chat - Free AI</title></head>
+    <body>
+      <h1>Chat with GPT-4o for free</h1>
+      <p>Free daily quota, no credit card required.</p>
+      <a href="https://other.com">Other</a>
+    </body></html>
+    """
+    respx.get("https://example.com/chat").mock(return_value=Response(200, text=target_html))
+
+    pipeline = DiscoveryPipeline(settings)
+    pipeline.client.chat_with_tool = AsyncMock(
+        side_effect=[
+            {"keywords": ["free ai chat"]},
+            {"keywords": ["ai driven design free"]},
+            {
+                "results": [
+                    {
+                        "title": "Example Chat",
+                        "url": "https://example.com/chat",
+                        "snippet": "Free AI chat",
+                    }
+                ]
+            },
+            {
+                "results": [
+                    {
+                        "title": "Example Chat on Bing",
+                        "url": "https://example.com/chat",
+                        "snippet": "Free AI chat",
+                    }
+                ]
+            },
+            {"urls": [{"url": "https://example.com/chat", "reason": "free chat"}]},
+            {"is_channel": True, "follow_urls": []},
+            {
+                "is_free_llm_chat": True,
+                "name": "ExampleChat",
+                "description": "Free AI chat",
+                "models": ["GPT-4o"],
+                "free_tier_desc": "Daily free quota",
+                "requires_auth": False,
+                "category": "pure_chat",
+                "confidence": "high",
+                "notes": "",
+            },
+        ]
+    )
+
+    try:
+        channels = await pipeline.run()
+    finally:
+        await pipeline.close()
+
+    assert len(channels) == 1
+    assert channels[0].name == "ExampleChat"
+    assert not settings.report_path.exists()
+    assert not settings.state_path.exists()

@@ -33,9 +33,7 @@ class DiscoveryPipeline:
         print(f"Generated {len(keywords)} keywords.")
 
         print("Discovering candidate URLs via recursive crawling...")
-        crawler = RecursiveCrawler(
-            self.settings, self.client, self.fetcher, self.firecrawl
-        )
+        crawler = RecursiveCrawler(self.settings, self.client, self.fetcher, self.firecrawl)
         candidate_urls = await crawler.discover(keywords)
         print(f"Discovered {len(candidate_urls)} candidate URLs.")
 
@@ -51,9 +49,12 @@ class DiscoveryPipeline:
 
         print(f"Analyzed {len(channels)} free LLM channels.")
 
-        if not self.settings.dry_run:
-            self.state.merge(channels)
-            self.state.save()
+        if self.settings.dry_run:
+            print("Dry run: skipping report/state writes.")
+            return channels
+
+        self.state.merge(channels)
+        self.state.save()
 
         records = self.state.list_channels(max_results=self.settings.max_results)
         print(f"Generating report with up to {len(records)} channels...")

@@ -1,6 +1,5 @@
 """GitHub source for discovering channels from awesome lists and search."""
 
-
 import httpx
 
 from channel_generator.fetcher import default_headers
@@ -39,7 +38,8 @@ class GitHubSource:
         urls: list[str] = []
         for item in items:
             raw_url = item.get("html_url", "").replace(
-                "https://github.com", "https://raw.githubusercontent.com")
+                "https://github.com", "https://raw.githubusercontent.com"
+            )
             raw_url += "/main/README.md"
             readme_text = await self._fetch_raw(raw_url)
             if not readme_text:

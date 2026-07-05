@@ -44,8 +44,7 @@ class RecursiveCrawler:
         google_results = await google_task
         bing_results = await bing_task
         unified_bing = [
-            GoogleResult(title=r.title, url=r.url, snippet=r.snippet)
-            for r in bing_results
+            GoogleResult(title=r.title, url=r.url, snippet=r.snippet) for r in bing_results
         ]
         return google_results, unified_bing
 
@@ -73,8 +72,7 @@ class RecursiveCrawler:
                     for r in fc_results
                 ]
             candidates = [
-                CandidateUrl(title=r.title, url=r.url, context=r.snippet)
-                for r in results
+                CandidateUrl(title=r.title, url=r.url, context=r.snippet) for r in results
             ]
             selected = await select_from_search_results(
                 self.client,

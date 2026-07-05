@@ -13,7 +13,12 @@ async def test_select_from_search_results():
     """Selector should return URLs from LLM response."""
     client = AsyncMock()
     client.chat_with_tool = AsyncMock(
-        return_value={"urls": [{"url": "https://a.com", "reason": "ok"}, {"url": "https://b.com", "reason": "ok"}]}
+        return_value={
+            "urls": [
+                {"url": "https://a.com", "reason": "ok"},
+                {"url": "https://b.com", "reason": "ok"},
+            ]
+        }
     )
 
     candidates = [

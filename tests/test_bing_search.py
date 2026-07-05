@@ -34,7 +34,11 @@ async def test_bing_search_parses_results(fetcher):
     client.chat_with_tool = AsyncMock(
         return_value={
             "results": [
-                {"title": "Example Chat", "url": "https://example.com/chat", "snippet": "Free AI chat website."},
+                {
+                    "title": "Example Chat",
+                    "url": "https://example.com/chat",
+                    "snippet": "Free AI chat website.",
+                },
             ]
         }
     )

@@ -74,10 +74,7 @@ async def summarize_channels(
             "confidence_counts": {"high": 0, "medium": 0, "low": 0},
         }
 
-    user_prompt = (
-        "Summarize the following discovered channels:\n\n"
-        f"{_truncate(str(channels))}"
-    )
+    user_prompt = f"Summarize the following discovered channels:\n\n{_truncate(str(channels))}"
     data = await client.chat_with_tool(
         system_prompt=SYSTEM_PROMPT,
         user_prompt=user_prompt,
@@ -88,5 +85,7 @@ async def summarize_channels(
         "summary": str(data.get("summary", "")),
         "highlights": [str(h) for h in data.get("highlights", [])],
         "category_counts": dict(data.get("category_counts", {})),
-        "confidence_counts": dict(data.get("confidence_counts", {"high": 0, "medium": 0, "low": 0})),
+        "confidence_counts": dict(
+            data.get("confidence_counts", {"high": 0, "medium": 0, "low": 0})
+        ),
     }

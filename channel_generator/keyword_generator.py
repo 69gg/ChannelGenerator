@@ -135,10 +135,7 @@ async def generate_keywords(
     remaining = max(settings.keyword_count - len(manual), 0)
     count_per_agent = max(1, remaining // num_agents)
 
-    tasks = [
-        _generate_from_perspective(client, p, count_per_agent, manual)
-        for p in perspectives
-    ]
+    tasks = [_generate_from_perspective(client, p, count_per_agent, manual) for p in perspectives]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     seen: set[str] = set()

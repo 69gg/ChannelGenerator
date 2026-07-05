@@ -58,7 +58,15 @@ ANALYZE_TOOL = tool(
             },
             "category": {
                 "type": "string",
-                "enum": ["pure_chat", "design_tool", "coding_tool", "writing_tool", "aggregator", "roleplay", "other"],
+                "enum": [
+                    "pure_chat",
+                    "design_tool",
+                    "coding_tool",
+                    "writing_tool",
+                    "aggregator",
+                    "roleplay",
+                    "other",
+                ],
                 "description": "Category of the site.",
             },
             "confidence": {
@@ -86,13 +94,35 @@ ANALYZE_TOOL = tool(
 )
 
 KNOWN_MODELS = [
-    "gpt", "gpt-5", "gpt-5.5", "gpt-5.5-mini",
-    "claude", "claude 4.8", "claude 5", "claude-4.8", "claude-5",
-    "gemini", "gemini 2.5", "gemini-2.5",
-    "glm", "glm-5", "glm-5.2", "glm5.2",
-    "kimi", "kimi k2.6", "kimi k2.7", "k2.6", "k2.7",
-    "deepseek", "deepseek v4", "deepseek-v4",
-    "llama", "qwen", "yi", "baichuan", "mixtral",
+    "gpt",
+    "gpt-5",
+    "gpt-5.5",
+    "gpt-5.5-mini",
+    "claude",
+    "claude 4.8",
+    "claude 5",
+    "claude-4.8",
+    "claude-5",
+    "gemini",
+    "gemini 2.5",
+    "gemini-2.5",
+    "glm",
+    "glm-5",
+    "glm-5.2",
+    "glm5.2",
+    "kimi",
+    "kimi k2.6",
+    "kimi k2.7",
+    "k2.6",
+    "k2.7",
+    "deepseek",
+    "deepseek v4",
+    "deepseek-v4",
+    "llama",
+    "qwen",
+    "yi",
+    "baichuan",
+    "mixtral",
 ]
 
 SYSTEM_PROMPT = f"""You are evaluating web pages for a research project.
@@ -109,7 +139,7 @@ A channel is any website that offers free LLM/AI chat functionality to individua
 
 The site must offer some free tier (no credit card required, daily free quota, free trial, etc.).
 
-Well-known models/providers to look for: {', '.join(KNOWN_MODELS)}.
+Well-known models/providers to look for: {", ".join(KNOWN_MODELS)}.
 Use the analyze_channel tool to report your findings.
 """
 
@@ -163,7 +193,9 @@ async def _analyze_chunk(
         return {"is_free_llm_chat": False, "error": str(exc)}
 
 
-def _merge_analyses(analyses: list[dict], url: str, title: str, description: str) -> ChannelInfo | None:
+def _merge_analyses(
+    analyses: list[dict], url: str, title: str, description: str
+) -> ChannelInfo | None:
     """Merge chunk analyses into a single ChannelInfo."""
     positive = [a for a in analyses if a.get("is_free_llm_chat", False)]
     if not positive:

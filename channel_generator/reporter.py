@@ -75,18 +75,20 @@ def generate_report(
     lines.extend(["## 渠道列表（按最近发现/验证时间倒序）", ""])
 
     for idx, ch in enumerate(channels, start=1):
-        lines.extend([
-            f"### {idx}. {ch.get('name', 'Unknown')}",
-            "",
-            f"- URL: {ch.get('url', '')}",
-            f"- 类别：{_category_label(ch.get('category', 'other'))}",
-            f"- 模型：{', '.join(ch.get('models', [])) or '未明确'}",
-            f"- 免费额度：{ch.get('free_tier_desc', '未明确')}",
-            f"- 需要登录：{'是' if ch.get('requires_auth') else '否'}",
-            f"- 置信度：{ch.get('confidence', 'low')}",
-            f"- 首次发现：{ch.get('first_seen_at', '')[:10]}",
-            f"- 最近验证：{ch.get('last_verified_at', '')[:10]}",
-        ])
+        lines.extend(
+            [
+                f"### {idx}. {ch.get('name', 'Unknown')}",
+                "",
+                f"- URL: {ch.get('url', '')}",
+                f"- 类别：{_category_label(ch.get('category', 'other'))}",
+                f"- 模型：{', '.join(ch.get('models', [])) or '未明确'}",
+                f"- 免费额度：{ch.get('free_tier_desc', '未明确')}",
+                f"- 需要登录：{'是' if ch.get('requires_auth') else '否'}",
+                f"- 置信度：{ch.get('confidence', 'low')}",
+                f"- 首次发现：{ch.get('first_seen_at', '')[:10]}",
+                f"- 最近验证：{ch.get('last_verified_at', '')[:10]}",
+            ]
+        )
         if ch.get("notes"):
             lines.append(f"- 备注：{ch.get('notes')}")
         lines.extend(["", "---", ""])

@@ -1,6 +1,5 @@
 """Hacker News source via Algolia search API."""
 
-
 import httpx
 
 from channel_generator.fetcher import default_headers
