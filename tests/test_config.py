@@ -12,6 +12,7 @@ def test_default_settings():
     assert settings.llm_model == "gpt-5.5"
     assert settings.keyword_count == 30
     assert settings.max_results == 200
+    assert settings.effective_concurrency == 8
     assert settings.effective_summary_model == "gpt-5.5"
     assert settings.chat_completion_options() == {}
     assert settings.chat_completion_options("summary") == {}

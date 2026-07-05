@@ -17,7 +17,7 @@ def settings(tmp_path):
         llm_model="gpt-4o-mini",
         llm_summary_model="gpt-4o-mini",
         keyword_count=1,
-        keyword_agents=2,
+        keyword_agents=1,
         urls_per_search_page=1,
         recursion_depth=1,
         urls_per_recursion=1,
@@ -69,17 +69,15 @@ async def test_pipeline_end_to_end(settings):
 
     # Mock LLM responses in expected order:
     # 1. keyword generation (agent 1)
-    # 2. keyword generation (agent 2)
-    # 3. google search result extraction
-    # 4. bing search result extraction
-    # 5. url selection from merged search results
-    # 6. page evaluation (is_channel + follow links)
-    # 7. channel analysis
-    # 8. summarization
+    # 2. google search result extraction
+    # 3. bing search result extraction
+    # 4. url selection from merged search results
+    # 5. page evaluation (is_channel + follow links)
+    # 6. channel analysis
+    # 7. summarization
     pipeline.client.chat_with_tool = AsyncMock(
         side_effect=[
             {"keywords": ["free ai chat"]},
-            {"keywords": ["ai driven design free"]},
             {
                 "results": [
                     {
@@ -175,7 +173,6 @@ async def test_pipeline_dry_run_does_not_write_files(settings):
     pipeline.client.chat_with_tool = AsyncMock(
         side_effect=[
             {"keywords": ["free ai chat"]},
-            {"keywords": ["ai driven design free"]},
             {
                 "results": [
                     {
@@ -246,7 +243,6 @@ async def test_pipeline_skips_page_evaluation_failures(settings):
     pipeline.client.chat_with_tool = AsyncMock(
         side_effect=[
             {"keywords": ["free ai chat"]},
-            {"keywords": ["ai driven design free"]},
             {
                 "results": [
                     {

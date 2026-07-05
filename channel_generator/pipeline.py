@@ -1,5 +1,7 @@
 """Main discovery pipeline orchestration."""
 
+import asyncio
+
 from channel_generator.analyzer import ChannelInfo, analyze_page
 from channel_generator.config import Settings
 from channel_generator.fetcher import Fetcher
@@ -38,14 +40,24 @@ class DiscoveryPipeline:
         print(f"Discovered {len(candidate_urls)} candidate URLs.")
 
         print("Analyzing candidates...")
-        channels: list[ChannelInfo] = []
-        for url in candidate_urls:
-            snapshot = await self.fetcher.fetch(url)
-            if snapshot.status_code != 200:
-                continue
-            info = await analyze_page(self.client, snapshot)
-            if info:
-                channels.append(info)
+        analyze_sem = asyncio.Semaphore(self.settings.effective_concurrency)
+
+        async def analyze_url(url: str) -> ChannelInfo | None:
+            async with analyze_sem:
+                snapshot = await self.fetcher.fetch(url)
+                if snapshot.status_code != 200:
+                    return None
+                try:
+                    return await analyze_page(self.client, snapshot)
+                except Exception as exc:
+                    print(f"Skipping candidate {snapshot.url}: analysis failed: {exc}")
+                    return None
+
+        results = await asyncio.gather(
+            *(analyze_url(url) for url in candidate_urls),
+            return_exceptions=True,
+        )
+        channels = [info for info in results if isinstance(info, ChannelInfo)]
 
         print(f"Analyzed {len(channels)} free LLM channels.")
 

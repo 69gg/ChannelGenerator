@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     state_path: Path = Field(default=Path("state.json"), alias="state_path")
 
     # Runtime
+    concurrency: int = Field(default=8, alias="concurrency")
     dry_run: bool = Field(default=False, alias="dry_run")
 
     @property
@@ -102,6 +103,11 @@ class Settings(BaseSettings):
         if not self.search_keywords:
             return []
         return [k.strip() for k in self.search_keywords.split(",") if k.strip()]
+
+    @property
+    def effective_concurrency(self) -> int:
+        """Return a safe concurrency limit."""
+        return max(1, self.concurrency)
 
 
 def load_settings(

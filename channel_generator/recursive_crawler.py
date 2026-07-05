@@ -1,5 +1,7 @@
 """Recursive crawler for discovering candidate channels."""
 
+import asyncio
+
 from channel_generator.config import Settings
 from channel_generator.fetcher import Fetcher
 from channel_generator.llm_client import LLMClient
@@ -39,33 +41,35 @@ class RecursiveCrawler:
         Returns:
             Tuple of (google_results, bing_results_as_google_result).
         """
-        google_task = self.google.search(keyword)
-        bing_task = self.bing.search(keyword)
-        google_results = await google_task
-        bing_results = await bing_task
+        google_result, bing_result = await asyncio.gather(
+            self.google.search(keyword),
+            self.bing.search(keyword),
+            return_exceptions=True,
+        )
+        google_results = [] if isinstance(google_result, Exception) else google_result
+        bing_results = [] if isinstance(bing_result, Exception) else bing_result
+        if isinstance(google_result, Exception) and isinstance(bing_result, Exception):
+            raise RuntimeError(f"Google and Bing search failed: {google_result}; {bing_result}")
         unified_bing = [
             GoogleResult(title=r.title, url=r.url, snippet=r.snippet) for r in bing_results
         ]
         return google_results, unified_bing
 
-    async def discover(self, keywords: list[str]) -> list[str]:
-        """Discover candidate channel URLs from a list of keywords.
-
-        Args:
-            keywords: Search keywords.
-
-        Returns:
-            List of discovered channel URLs.
-        """
-        channel_urls: set[str] = set()
-        visited: set[str] = set()
-
-        for keyword in keywords:
+    async def _discover_keyword(
+        self,
+        keyword: str,
+        visited: set[str],
+        channel_urls: set[str],
+        search_sem: asyncio.Semaphore,
+        crawl_sem: asyncio.Semaphore,
+    ) -> None:
+        """Process one keyword and crawl selected URLs."""
+        async with search_sem:
             try:
                 google_results, bing_results = await self._search_all(keyword)
             except Exception as exc:
                 print(f"Skipping keyword {keyword!r}: search failed: {exc}")
-                continue
+                return
             results = google_results + bing_results
             if not results and self.firecrawl is not None:
                 try:
@@ -74,7 +78,7 @@ class RecursiveCrawler:
                     )
                 except Exception as exc:
                     print(f"Skipping keyword {keyword!r}: fallback search failed: {exc}")
-                    continue
+                    return
                 results = [
                     GoogleResult(title=r.title, url=r.url, snippet=r.description)
                     for r in fc_results
@@ -90,10 +94,49 @@ class RecursiveCrawler:
                 )
             except Exception as exc:
                 print(f"Skipping keyword {keyword!r}: URL selection failed: {exc}")
-                continue
+                return
 
-            for url in selected:
-                await self._crawl(url, depth=0, visited=visited, channel_urls=channel_urls)
+        await asyncio.gather(
+            *(
+                self._crawl(
+                    url,
+                    depth=0,
+                    visited=visited,
+                    channel_urls=channel_urls,
+                    crawl_sem=crawl_sem,
+                )
+                for url in selected
+            ),
+            return_exceptions=True,
+        )
+
+    async def discover(self, keywords: list[str]) -> list[str]:
+        """Discover candidate channel URLs from a list of keywords.
+
+        Args:
+            keywords: Search keywords.
+
+        Returns:
+            List of discovered channel URLs.
+        """
+        channel_urls: set[str] = set()
+        visited: set[str] = set()
+        search_sem = asyncio.Semaphore(self.settings.effective_concurrency)
+        crawl_sem = asyncio.Semaphore(self.settings.effective_concurrency)
+
+        await asyncio.gather(
+            *(
+                self._discover_keyword(
+                    keyword,
+                    visited=visited,
+                    channel_urls=channel_urls,
+                    search_sem=search_sem,
+                    crawl_sem=crawl_sem,
+                )
+                for keyword in keywords
+            ),
+            return_exceptions=True,
+        )
 
         return list(channel_urls)
 
@@ -103,6 +146,7 @@ class RecursiveCrawler:
         depth: int,
         visited: set[str],
         channel_urls: set[str],
+        crawl_sem: asyncio.Semaphore,
     ) -> None:
         """Recursively crawl a URL.
 
@@ -116,23 +160,24 @@ class RecursiveCrawler:
             return
         visited.add(url)
 
-        snapshot = await self.fetcher.fetch(url)
-        if snapshot.status_code != 200:
-            return
+        async with crawl_sem:
+            snapshot = await self.fetcher.fetch(url)
+            if snapshot.status_code != 200:
+                return
 
-        try:
-            is_channel, follow_urls = await evaluate_page_and_select_links(
-                self.client,
-                url=snapshot.url,
-                title=snapshot.title,
-                description=snapshot.description,
-                page_text=snapshot.text,
-                links=snapshot.links,
-                max_follow=self.settings.urls_per_recursion,
-            )
-        except Exception as exc:
-            print(f"Skipping URL {snapshot.url}: page evaluation failed: {exc}")
-            return
+            try:
+                is_channel, follow_urls = await evaluate_page_and_select_links(
+                    self.client,
+                    url=snapshot.url,
+                    title=snapshot.title,
+                    description=snapshot.description,
+                    page_text=snapshot.text,
+                    links=snapshot.links,
+                    max_follow=self.settings.urls_per_recursion,
+                )
+            except Exception as exc:
+                print(f"Skipping URL {snapshot.url}: page evaluation failed: {exc}")
+                return
 
         if is_channel:
             channel_urls.add(snapshot.url)
@@ -140,5 +185,10 @@ class RecursiveCrawler:
         if depth >= self.settings.recursion_depth:
             return
 
-        for next_url in follow_urls:
-            await self._crawl(next_url, depth + 1, visited, channel_urls)
+        await asyncio.gather(
+            *(
+                self._crawl(next_url, depth + 1, visited, channel_urls, crawl_sem)
+                for next_url in follow_urls
+            ),
+            return_exceptions=True,
+        )
