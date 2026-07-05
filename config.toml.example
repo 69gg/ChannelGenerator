@@ -5,6 +5,9 @@ llm_base_url = "https://api.openai.com/v1"
 llm_api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 llm_model = "gpt-5.5"
 llm_summary_model = "gpt-5.5"
+# Optional completion token limits. Uses chat completions max_tokens.
+# llm_max_tokens = 81920
+# llm_summary_max_tokens = 81920
 # Optional provider-specific thinking controls.
 # llm_thinking_enabled = true
 # llm_reasoning_effort = "high"

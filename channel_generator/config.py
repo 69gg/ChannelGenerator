@@ -22,8 +22,10 @@ class Settings(BaseSettings):
     llm_api_key: str = Field(default="", alias="llm_api_key")
     llm_model: str = Field(default="gpt-5.5", alias="llm_model")
     llm_summary_model: str | None = Field(default=None, alias="llm_summary_model")
+    llm_max_tokens: int | None = Field(default=None, alias="llm_max_tokens")
     llm_thinking_enabled: bool | None = Field(default=None, alias="llm_thinking_enabled")
     llm_reasoning_effort: str | None = Field(default=None, alias="llm_reasoning_effort")
+    llm_summary_max_tokens: int | None = Field(default=None, alias="llm_summary_max_tokens")
     llm_summary_thinking_enabled: bool | None = Field(
         default=None,
         alias="llm_summary_thinking_enabled",
@@ -68,8 +70,11 @@ class Settings(BaseSettings):
         """
         thinking_enabled = self.llm_thinking_enabled
         reasoning_effort = self.llm_reasoning_effort
+        max_tokens = self.llm_max_tokens
 
         if model_role == "summary":
+            if self.llm_summary_max_tokens is not None:
+                max_tokens = self.llm_summary_max_tokens
             if self.llm_summary_thinking_enabled is not None:
                 thinking_enabled = self.llm_summary_thinking_enabled
             if self.llm_summary_reasoning_effort:
@@ -78,6 +83,8 @@ class Settings(BaseSettings):
         options: dict[str, Any] = {}
         if reasoning_effort:
             options["reasoning_effort"] = reasoning_effort
+        if max_tokens is not None:
+            options["max_tokens"] = max_tokens
 
         extra_body: dict[str, Any] = {}
         if thinking_enabled is not None:

@@ -49,6 +49,8 @@ uv run channel-generator run --config config.toml
    - `LLM_BASE_URL` (default: `https://api.openai.com/v1`)
    - `LLM_MODEL` (default: `gpt-5.5`)
    - `LLM_SUMMARY_MODEL` (default: `gpt-5.5`)
+   - `LLM_MAX_TOKENS` (optional, passed as `max_tokens`)
+   - `LLM_SUMMARY_MAX_TOKENS` (optional, passed as `max_tokens`; defaults to `LLM_MAX_TOKENS` in local config)
    - `LLM_THINKING_ENABLED` (optional, `true` or `false`)
    - `LLM_REASONING_EFFORT` (optional, for example `high`)
    - `LLM_SUMMARY_THINKING_ENABLED` (optional, `true` or `false`)
@@ -84,9 +86,12 @@ Supplementary sources (Firecrawl keyless search, GitHub, Hacker News, Reddit) ar
 --llm-api-key TEXT             OpenAI-compatible API key
 --llm-model TEXT               Model for keyword/url/analysis steps
 --llm-summary-model TEXT       Model for final summarization
+--llm-max-tokens INTEGER       Maximum tokens for main model completions
 --llm-thinking / --no-llm-thinking
                                Enable or disable provider-specific thinking for the main model
 --llm-reasoning-effort TEXT    Reasoning effort for the main model
+--llm-summary-max-tokens INTEGER
+                               Maximum tokens for summary model completions
 --llm-summary-thinking / --no-llm-summary-thinking
                                Enable or disable provider-specific thinking for the summary model
 --llm-summary-reasoning-effort TEXT

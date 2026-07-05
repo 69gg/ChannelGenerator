@@ -42,8 +42,10 @@ llm_api_key = "test-key"
 llm_model = "gpt-4o"
 keyword_count = 10
 max_results = 50
+llm_max_tokens = 81920
 llm_thinking_enabled = true
 llm_reasoning_effort = "high"
+llm_summary_max_tokens = 40960
 llm_summary_thinking_enabled = false
 llm_summary_reasoning_effort = "medium"
 """,
@@ -57,10 +59,12 @@ llm_summary_reasoning_effort = "medium"
     assert settings.max_results == 50
     assert settings.chat_completion_options() == {
         "reasoning_effort": "high",
+        "max_tokens": 81920,
         "extra_body": {"thinking": {"type": "enabled"}},
     }
     assert settings.chat_completion_options("summary") == {
         "reasoning_effort": "medium",
+        "max_tokens": 40960,
         "extra_body": {"thinking": {"type": "disabled"}},
     }
 

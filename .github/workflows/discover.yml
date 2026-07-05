@@ -42,8 +42,10 @@ jobs:
           CFG_LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
           CFG_LLM_MODEL: ${{ vars.LLM_MODEL }}
           CFG_LLM_SUMMARY_MODEL: ${{ vars.LLM_SUMMARY_MODEL }}
+          CFG_LLM_MAX_TOKENS: ${{ vars.LLM_MAX_TOKENS }}
           CFG_LLM_THINKING_ENABLED: ${{ vars.LLM_THINKING_ENABLED }}
           CFG_LLM_REASONING_EFFORT: ${{ vars.LLM_REASONING_EFFORT }}
+          CFG_LLM_SUMMARY_MAX_TOKENS: ${{ vars.LLM_SUMMARY_MAX_TOKENS }}
           CFG_LLM_SUMMARY_THINKING_ENABLED: ${{ vars.LLM_SUMMARY_THINKING_ENABLED }}
           CFG_LLM_SUMMARY_REASONING_EFFORT: ${{ vars.LLM_SUMMARY_REASONING_EFFORT }}
           CFG_KEYWORD_COUNT: ${{ vars.KEYWORD_COUNT }}
@@ -86,8 +88,10 @@ jobs:
           add_arg --llm-base-url "$CFG_LLM_BASE_URL"
           add_arg --llm-model "$CFG_LLM_MODEL"
           add_arg --llm-summary-model "$CFG_LLM_SUMMARY_MODEL"
+          add_arg --llm-max-tokens "$CFG_LLM_MAX_TOKENS"
           add_bool_flag --llm-thinking --no-llm-thinking "$CFG_LLM_THINKING_ENABLED"
           add_arg --llm-reasoning-effort "$CFG_LLM_REASONING_EFFORT"
+          add_arg --llm-summary-max-tokens "$CFG_LLM_SUMMARY_MAX_TOKENS"
           add_bool_flag \
             --llm-summary-thinking \
             --no-llm-summary-thinking \

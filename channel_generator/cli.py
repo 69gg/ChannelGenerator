@@ -41,6 +41,11 @@ def run(
         "--llm-summary-model",
         help="Model name for final summarization.",
     ),
+    llm_max_tokens: int | None = typer.Option(
+        None,
+        "--llm-max-tokens",
+        help="Maximum tokens for main model completions.",
+    ),
     llm_thinking_enabled: bool | None = typer.Option(
         None,
         "--llm-thinking/--no-llm-thinking",
@@ -60,6 +65,11 @@ def run(
         None,
         "--llm-summary-reasoning-effort",
         help="Reasoning effort for the summary model, for providers that support it.",
+    ),
+    llm_summary_max_tokens: int | None = typer.Option(
+        None,
+        "--llm-summary-max-tokens",
+        help="Maximum tokens for summary model completions.",
     ),
     keyword_count: int | None = typer.Option(
         None,
@@ -126,8 +136,10 @@ def run(
             "llm_api_key": llm_api_key,
             "llm_model": llm_model,
             "llm_summary_model": llm_summary_model,
+            "llm_max_tokens": llm_max_tokens,
             "llm_thinking_enabled": llm_thinking_enabled,
             "llm_reasoning_effort": llm_reasoning_effort,
+            "llm_summary_max_tokens": llm_summary_max_tokens,
             "llm_summary_thinking_enabled": llm_summary_thinking_enabled,
             "llm_summary_reasoning_effort": llm_summary_reasoning_effort,
             "keyword_count": keyword_count,

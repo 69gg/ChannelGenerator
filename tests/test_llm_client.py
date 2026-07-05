@@ -45,6 +45,7 @@ async def test_chat_with_tool_includes_main_reasoning_options() -> None:
     """Main-model calls should include configured thinking and effort options."""
     settings = Settings(
         llm_api_key="test",
+        llm_max_tokens=81920,
         llm_thinking_enabled=True,
         llm_reasoning_effort="high",
     )
@@ -62,6 +63,8 @@ async def test_chat_with_tool_includes_main_reasoning_options() -> None:
 
     assert result == {"ok": True}
     assert completions.calls[0]["reasoning_effort"] == "high"
+    assert completions.calls[0]["max_tokens"] == 81920
+    assert "max_completion_tokens" not in completions.calls[0]
     assert completions.calls[0]["extra_body"] == {
         "thinking": {"type": "enabled"},
     }
@@ -73,8 +76,10 @@ async def test_chat_with_tool_includes_summary_reasoning_options() -> None:
         llm_api_key="test",
         llm_model="kimi-k2.6",
         llm_summary_model="deepseek-v4-pro",
+        llm_max_tokens=81920,
         llm_thinking_enabled=False,
         llm_reasoning_effort="low",
+        llm_summary_max_tokens=81920,
         llm_summary_thinking_enabled=True,
         llm_summary_reasoning_effort="high",
     )
@@ -94,6 +99,8 @@ async def test_chat_with_tool_includes_summary_reasoning_options() -> None:
 
     assert completions.calls[0]["model"] == "deepseek-v4-pro"
     assert completions.calls[0]["reasoning_effort"] == "high"
+    assert completions.calls[0]["max_tokens"] == 81920
+    assert "max_completion_tokens" not in completions.calls[0]
     assert completions.calls[0]["extra_body"] == {
         "thinking": {"type": "enabled"},
     }
