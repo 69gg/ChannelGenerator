@@ -50,13 +50,14 @@ uv run channel-generator run --config config.toml
    - `LLM_MODEL` (default: `gpt-5.5`)
    - `LLM_SUMMARY_MODEL` (default: `gpt-5.5`)
    - `KEYWORD_COUNT` (default: `30`)
+   - `KEYWORD_AGENTS` (default: `8`)
    - `URLS_PER_SEARCH_PAGE` (default: `5`)
    - `RECURSION_DEPTH` (default: `2`)
    - `URLS_PER_RECURSION` (default: `3`)
    - `MAX_SEARCH_PER_QUERY` (default: `20`)
    - `MAX_RESULTS` (default: `200`)
 4. The workflow runs daily at 02:00 UTC and can be triggered manually from the **Actions** tab.
-5. Each run creates a GitHub Release with the trigger time as the tag and title, attaching `report.md` and `state.json`.
+5. Each run uploads `report.md` and `state.json` as a workflow artifact, then creates a GitHub Release using the UTC run time for the tag and title, attaching both files.
 
 > Generated artifacts (`report.md`, `state.json`) are ignored by git and only distributed via Releases.
 
